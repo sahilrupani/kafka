@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui-railway
+    ports:
+      - "8080:8080"
+    environment:
+      # The UI listens on SERVER_PORT (default 8080)
+      - SERVER_PORT=8080
+      # Minimal required cluster configuration (edit these or use an env file)
+      - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME:-cluster-1}
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS:-localhost:9092}
+      # Optional: Enable adding clusters dynamically via the UI
+      - DYNAMIC_CONFIG_ENABLED=${DYNAMIC_CONFIG_ENABLED:-true}
+    env_file:
+      - .env

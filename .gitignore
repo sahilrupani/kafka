@@ -1,0 +1,12 @@
+# General
+.DS_Store
+node_modules/
+dist/
+build/
+
+# Env
+.env
+
+# Docker
+*.log
+.docker/
