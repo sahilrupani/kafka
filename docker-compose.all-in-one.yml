@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  kafka-suite:
+    build:
+      context: .
+      dockerfile: Dockerfile.all-in-one
+    container_name: ${ALL_IN_ONE_CONTAINER_NAME:-kafka-suite}
+    environment:
+      # Kafka UI config
+      - SERVER_PORT=8080
+      - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME:-cluster-1}
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS:-localhost:9092}
+      - DYNAMIC_CONFIG_ENABLED=${DYNAMIC_CONFIG_ENABLED:-true}
+      # Kafka UI JAR (required on first run; downloaded at startup)
+      - KAFKA_UI_JAR_URL=${KAFKA_UI_JAR_URL}
+
+      # Shared Kafka client settings (producer/consumer)
+      - KAFKA_BROKERS=${KAFKA_BROKERS:-localhost:9092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-demo-topic}
+      - KAFKA_SSL=${KAFKA_SSL}
+      - KAFKA_SECURITY_PROTOCOL=${KAFKA_SECURITY_PROTOCOL}
+      - KAFKA_SASL_MECHANISM=${KAFKA_SASL_MECHANISM}
+      - KAFKA_SASL_USERNAME=${KAFKA_SASL_USERNAME}
+      - KAFKA_SASL_PASSWORD=${KAFKA_SASL_PASSWORD}
+
+      # Producer/Consumer ports inside container
+      - PRODUCER_PORT=3001
+      - CONSUMER_PORT=3002
+
+    ports:
+      - "8080:8080" # UI
+      - "3001:3001" # Producer HTTP
+      - "3002:3002" # Consumer HTTP
+    env_file:
+      - .env

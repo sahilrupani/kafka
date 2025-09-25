@@ -15,6 +15,13 @@ It provides topic browsing, consumer groups, partitions, message inspection/prod
   - Producer health: http://localhost:3001/health | stats: http://localhost:3001/stats
   - Consumer health: http://localhost:3002/health | stats: http://localhost:3002/stats
 
+### Single-Container (All-in-One) Option
+- Build and run the UI + Producer + Consumer in one container.
+- Steps:
+  - Ensure `.env` contains a valid `KAFKA_UI_JAR_URL` (a release JAR from provectus/kafka-ui).
+  - Run: `docker compose -f docker-compose.all-in-one.yml up -d --build`
+  - UI: http://localhost:8080 | Producer: :3001 | Consumer: :3002
+
 - Deploy on Railway:
   - Create a new Railway project from this repo (or use a Deploy button).
   - Set environment variables for your Kafka cluster (see Config below).
@@ -67,19 +74,20 @@ For the sample Producer/Consumer, set:
 
 
 ## Railway Setup
-- Create a Railway project from this repo.
-- Create three services from this repo:
-  - kafka-ui (Service Path: `/`, Dockerfile at root)
-  - producer (Service Path: `/producer`, Dockerfile in that folder)
-  - consumer (Service Path: `/consumer`, Dockerfile in that folder)
-- Set environment variables on each service:
-  - Shared: `KAFKA_BROKERS`, `KAFKA_TOPIC`, and any `KAFKA_SSL` / `KAFKA_SASL_*` if needed.
-  - UI: `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS` (match `KAFKA_BROKERS`), `KAFKA_CLUSTERS_0_NAME`.
-  - Producer: optional `PRODUCER_INTERVAL_MS`, `PRODUCER_KAFKA_CLIENT_ID`.
-  - Consumer: `KAFKA_GROUP_ID`, optional `CONSUMER_KAFKA_CLIENT_ID`.
-- Ports:
-  - kafka-ui listens on `8080` (use `SERVER_PORT=8080` if needed).
-  - producer/consumer expose an HTTP health port `3000` (Railway typically assigns an external URL; you can set `PORT=3000`).
+- Option A: Three services (recommended for clarity)
+  - Create a Railway project from this repo.
+  - Create services: kafka-ui (`/`), producer (`/producer`), consumer (`/consumer`).
+  - Use an Environment Group to share `KAFKA_BROKERS`, `KAFKA_TOPIC`, `KAFKA_SSL` / `KAFKA_SASL_*`.
+  - UI: set `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS` to match `KAFKA_BROKERS`, and `KAFKA_CLUSTERS_0_NAME`.
+  - Ports: UI `SERVER_PORT=8080`; producer/consumer `PORT=3000`.
+
+- Option B: Single service (All-in-One)
+  - Create one service using `Dockerfile.all-in-one` at the repo root (Service Path: `/`, change Dockerfile setting in Railway to `Dockerfile.all-in-one`).
+  - Set vars once on this service:
+    - UI: `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS`, `KAFKA_CLUSTERS_0_NAME`, and `KAFKA_UI_JAR_URL`.
+    - Shared: `KAFKA_BROKERS`, `KAFKA_TOPIC`, optional `KAFKA_SSL`, `KAFKA_SASL_*`.
+    - Optional: `PRODUCER_INTERVAL_MS`.
+  - Exposed ports: UI `8080` (Railway internal), producer `3001`, consumer `3002` (mostly for health checks).
 
 ## Deploy Button
 The Deploy button above uses a placeholder URL. After pushing to GitHub, replace `https://github.com/OWNER/REPO` with your repo URL so Railway can import your template directly.

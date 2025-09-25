@@ -1,0 +1,43 @@
+# All-in-one image: Kafka UI + Producer + Consumer in one container
+# Notes:
+# - Requires Java (for Kafka UI JAR) and Node.js (for sample apps)
+# - At runtime, the entrypoint downloads the Kafka UI JAR if missing and
+#   env var KAFKA_UI_JAR_URL is provided (recommended).
+
+FROM node:18-bullseye
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      openjdk-17-jre-headless \
+      curl \
+      ca-certificates \
+      dumb-init \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy producer/consumer and install deps
+COPY producer/package*.json ./producer/
+COPY consumer/package*.json ./consumer/
+RUN npm ci --omit=dev --prefix ./producer \
+ && npm ci --omit=dev --prefix ./consumer
+
+COPY producer/src ./producer/src
+COPY consumer/src ./consumer/src
+
+# Startup script will optionally fetch Kafka UI JAR at runtime
+COPY scripts/start-all.sh /app/start-all.sh
+RUN chmod +x /app/start-all.sh
+
+# Ports: UI 8080, producer 3001, consumer 3002
+EXPOSE 8080 3001 3002
+
+ENV SERVER_PORT=8080 \
+    PRODUCER_PORT=3001 \
+    CONSUMER_PORT=3002
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/app/start-all.sh"]
+
